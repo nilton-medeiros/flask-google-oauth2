@@ -22,7 +22,7 @@ app.debug = True
 
 # oAuth Setup
 oauth = OAuth(app)
-google = oauth.register(
+googlelogin = oauth.register(
     name='google',
     client_id=os.getenv("GOOGLE_CLIENT_ID"),
     client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
@@ -30,8 +30,8 @@ google = oauth.register(
     access_token_params=None,
     authorize_url='https://accounts.google.com/o/oauth2/auth',
     authorize_params=None,
-    api_base_url='https://www.googleapis.com/oauth2/v1/',
-    userinfo_endpoint='https://openidconnect.googleapis.com/v1/userinfo',  # This is only needed if using openId to fetch user info
+    api_base_url='https://www.googleapis.com/oauth2/v1/userinfo',
+    userinfo_endpoint='https://openidconnect.googleapis.com/v1/userinfo',  # Isso só é necessário se estiver usando openId para buscar informações do usuário
     client_kwargs={'scope': 'openid email profile'},
 )
 
@@ -45,21 +45,21 @@ def hello_world():
 
 @app.route('/login')
 def login():
-    google = oauth.create_client('google')  # cria o cliente google oauth
+    googlelogin = oauth.create_client('google')  # cria o cliente google oauth
     redirect_uri = url_for('authorize', _external=True)
-    return google.authorize_redirect(redirect_uri)
+    return googlelogin.authorize_redirect(redirect_uri)
 
 
 @app.route('/authorize')
 def authorize():
     google = oauth.create_client('google')  # cria o cliente google oauth
-    token = google.authorize_access_token()  # Token de acesso do google (necessário para obter informações do usuário)
+    google.authorize_access_token()
     resp = google.get('userinfo')  # userinfo contém coisas que você especificou no scrope
     user_info = resp.json()
     user = oauth.google.userinfo()  # usa endpoint openid para buscar informações do usuário
     # Aqui você usa os dados de perfil/usuário que obteve e consulta seu banco de dados, localizar/registrar o usuário
     # e definir seus próprios dados na sessão, não o perfil do google session['profile'] = user_info
-    session.permanent = True  # tornar a sessão permanente para que continue existindo depois que o navegador for fechado
+    session.permanent = False  # tornar a sessão permanente para que continue existindo depois que o navegador for fechado
     return redirect('/')
 
 
